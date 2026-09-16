@@ -1,0 +1,1293 @@
+Yes. **Ippo dashboard-a just “authority monitoring dashboard” madhiri vechurukka koodadhu.** Correct architecture should be:
+
+> **App open → Public Page first → Public users can use useful features without login → “Authority Login” button → authenticated Authority Dashboard → Authority gets ALL detailed features.**
+
+And most importantly, **Public + Authority rendu perum same ESP32 live Firebase data use pannanum.** Mock data gradually remove pannalam.
+
+## 1. Final App Structure
+
+```text
+                    APP OPEN
+                       │
+                       ▼
+              ┌─────────────────┐
+              │   PUBLIC HOME   │
+              │       /         │
+              └────────┬────────┘
+                       │
+          ┌────────────┴────────────┐
+          ▼                         ▼
+   PUBLIC DASHBOARD            AUTHORITY LOGIN
+   No authorization                  │
+          │                          ▼
+          │                 FIREBASE AUTHENTICATION
+          │                          │
+          │                          ▼
+          │                 AUTHORITY DASHBOARD
+          │                 /dashboard/*
+          │
+          ├── Home
+          ├── Live Risk Map
+          ├── Nearby Risks
+          ├── Alerts
+          ├── Environmental Status
+          ├── Safety Center
+          ├── Emergency Info
+          ├── My Area
+          ├── Weather/Environment
+          └── Public Profile
+```
+
+---
+
+# 2. PUBLIC SIDE — What Should Be Available?
+
+Public dashboard should answer one main question:
+
+> **“Is my area safe right now?”**
+
+Public users **should NOT see raw technical ESP32 information**.
+
+For example, public shouldn't see:
+
+```text
+MQ2 ADC = 1832
+GPIO 32
+Accel X = 194
+Model feature importance
+ESP32 internal status
+Raw sensor calibration
+```
+
+Instead they should see:
+
+```text
+🔥 Forest Fire
+HIGH RISK
+3.2 km away
+
+⚠️ Extreme Heat
+WARNING
+
+🌫️ Air Quality
+MODERATE
+```
+
+---
+
+# 3. Public Home Page `/`
+
+This should be the **first page when the application opens**.
+
+### Header
+
+```text
+Environmental Safety Network
+
+Home
+Map
+Risks
+Alerts
+Safety
+
+                         Authority Login
+```
+
+### Main section
+
+```text
+        Environmental Status
+
+             🟢 SAFE
+
+       Your area is currently safe
+
+Last updated: 2 minutes ago
+```
+
+Then:
+
+```text
+Nearby Risks
+
+🔥 Forest Fire        SAFE
+🌡️ Extreme Heat      WARNING
+🌊 Flood              SAFE
+⛰️ Landslide          SAFE
+🌫️ Air Quality       MODERATE
+💧 Water Quality      SAFE
+🏭 Industrial         SAFE
+```
+
+**These values must come from your ESP32 → Firebase data.**
+
+---
+
+# 4. Public “My Area” Feature
+
+This is one of the most important features.
+
+User can either:
+
+### Option A
+
+Click:
+
+> 📍 Use My Location
+
+### Option B
+
+Select:
+
+```text
+Select your area
+
+Chennai
+Guindy
+Adyar
+Velachery
+Tambaram
+...
+```
+
+Then the application finds the nearest monitoring node / relevant risk zone.
+
+Example:
+
+```text
+📍 Your Area
+
+Velachery
+
+Nearest Monitoring Node
+Node 001
+
+Distance
+2.4 km
+
+Overall Risk
+⚠️ WARNING
+```
+
+Then show the individual hazards.
+
+---
+
+# 5. Public Live Risk Map
+
+Create:
+
+```text
+/public/map
+```
+
+Use **Leaflet + React-Leaflet**.
+
+Map can contain:
+
+```text
+             🔥
+          High Risk
+
+     🟢 Node 001
+
+                    🌡️
+                 Warning
+
+        🟢 Safe Area
+
+              🌊
+           Flood Risk
+```
+
+### Public map filters
+
+```text
+☑ All
+
+🔥 Forest Fire
+🌫️ Air Pollution
+💧 Water
+🌡️ Extreme Heat
+🌊 Flood
+⛰️ Landslide
+🏭 Industrial
+```
+
+Clicking a marker:
+
+```text
+Forest Fire Alert
+
+Area: XYZ
+Risk: HIGH
+Detected: 2 mins ago
+Distance: 3.2 km
+
+⚠️ Avoid the affected area
+```
+
+---
+
+# 6. Public Nearby Risks `/public/risks`
+
+This should automatically calculate which risks are closest to the user.
+
+Example:
+
+```text
+NEARBY RISKS
+
+🔴 HIGH
+Forest Fire
+3.2 km away
+Detected 2 minutes ago
+
+🟠 WARNING
+Extreme Heat
+4.1 km away
+
+🟡 MODERATE
+Air Pollution
+6.8 km away
+
+🟢 SAFE
+Flood
+8.2 km away
+```
+
+Sort by:
+
+**Severity + Distance**
+
+So a critical hazard 5 km away should appear before a safe node 500 m away.
+
+---
+
+# 7. Public Alert Center `/public/alerts`
+
+Only meaningful alerts should appear.
+
+Don't show every sensor fluctuation.
+
+Example:
+
+### 🔴 CRITICAL ALERT
+
+```text
+FOREST FIRE RISK
+
+High fire risk detected near XYZ area.
+
+Distance from you:
+3.2 km
+
+Detected:
+14:35
+
+Recommended Action:
+Avoid the affected area.
+Stay away from smoke.
+Follow official instructions.
+```
+
+### 🟠 WARNING
+
+```text
+EXTREME HEAT WARNING
+
+High temperature conditions detected.
+
+Stay hydrated and avoid prolonged outdoor exposure.
+```
+
+---
+
+# 8. Public Safety Center `/public/safety`
+
+This can become a very useful feature.
+
+Create separate cards:
+
+```text
+🔥 Forest Fire Safety
+🌊 Flood Safety
+⛰️ Landslide Safety
+🌡️ Heat Safety
+🌫️ Air Pollution Safety
+💧 Water Safety
+🏭 Industrial Hazard Safety
+```
+
+Clicking one gives:
+
+```text
+Before
+During
+After
+
+What should you do?
+What should you avoid?
+When should you evacuate?
+```
+
+This makes the application useful even when there isn't an active alert.
+
+---
+
+# 9. Public Emergency Center
+
+Add:
+
+```text
+🚨 Emergency Help
+```
+
+For example:
+
+```text
+Emergency Services
+Police
+Fire & Rescue
+Ambulance
+Disaster Management
+```
+
+You can later make these clickable phone actions on mobile.
+
+For an actual deployment, verify the emergency numbers and local authority information before publishing.
+
+---
+
+# 10. Public Profile
+
+You specifically asked for more features here.
+
+Since **public users don't need authorization**, don't make profile dependent on Firebase login.
+
+Instead:
+
+```text
+PUBLIC PROFILE
+
+📍 My Area
+Velachery
+
+📏 Alert Radius
+5 km
+
+🔔 Notifications
+Enabled
+
+🌐 Language
+English
+
+⚠️ Preferred Alerts
+
+☑ Fire
+☑ Flood
+☑ Heat
+☑ Air Pollution
+☑ Landslide
+☑ Industrial
+
+🌙 Appearance
+Dark / Light
+
+🔊 Alert Sound
+ON
+```
+
+You can store non-sensitive preferences in browser `localStorage`.
+
+---
+
+# 11. Public Notification Settings
+
+Very useful later.
+
+User can select:
+
+```text
+Notify me when:
+
+☑ Critical alerts
+☑ High-risk alerts
+☑ Flood warnings
+☑ Fire warnings
+☑ Heat warnings
+☑ Air pollution warnings
+```
+
+Then eventually integrate Firebase Cloud Messaging.
+
+---
+
+# 12. Public “Environmental Status” Page
+
+Give users a simple overview:
+
+```text
+TODAY'S ENVIRONMENT
+
+🌡️ Temperature
+35.4°C
+
+💧 Humidity
+61%
+
+🌫️ Air Quality
+Moderate
+
+💧 Water Quality
+Safe
+
+🔥 Forest Fire
+Safe
+
+🌊 Flood
+Safe
+
+⛰️ Landslide
+Safe
+```
+
+Again, these should come from **live Firebase values**, not mock values.
+
+---
+
+# 13. AUTHORITY SIDE
+
+Authority login should be somewhere visible but not dominant.
+
+For example:
+
+```text
+Header
+────────────────────────────────
+
+Environmental Safety Network
+
+Home   Map   Risks   Safety
+
+                         🔐 Authority
+```
+
+Click:
+
+```text
+Authority
+```
+
+→
+
+```text
+/login
+```
+
+→ Firebase Authentication
+
+→
+
+```text
+/dashboard
+```
+
+---
+
+# 14. Authority Dashboard = FULL ACCESS
+
+Authority should see **everything**.
+
+### Sidebar
+
+```text
+COMMAND CENTER
+
+🏠 Overview
+
+🗺️ Risk Map
+
+⚠️ Alerts
+
+🔥 Disaster Monitoring
+
+🌱 Environmental Monitoring
+
+📡 Live Sensors
+
+🤖 AI / ML
+
+📊 Analytics
+
+📍 Nodes
+
+🔧 Device Health
+
+📋 Incidents
+
+📄 Reports
+
+⚙️ Settings
+```
+
+Public users should **never** get these internal pages.
+
+---
+
+# 15. Authority Command Center
+
+Your current DashboardHome can become this.
+
+Top cards:
+
+```text
+MONITORING NODES
+1 Online
+
+ACTIVE ALERTS
+3
+
+CRITICAL
+1
+
+WARNING
+2
+
+OFFLINE
+0
+```
+
+Then:
+
+```text
+          LIVE MULTI-HAZARD MAP
+```
+
+Then:
+
+```text
+Forest Fire      🟢 SAFE
+Air Pollution    🟠 WARNING
+Water Quality    🟢 SAFE
+Flood            🟢 SAFE
+Landslide        🔴 DANGER
+Extreme Heat     🟠 WARNING
+Industrial       🟢 SAFE
+```
+
+---
+
+# 16. Authority Risk Map
+
+This is different from the public map.
+
+### Authority sees:
+
+* Every sensor node
+* Exact node location
+* Sensor values
+* AI prediction
+* Confidence
+* Risk score
+* Node health
+* Last update
+* Device status
+* Hazard zones
+* Historical information
+
+Example popup:
+
+```text
+NODE 001
+
+Location:
+XYZ
+
+Temperature: 38.6°C
+Humidity: 42%
+MQ2: 1832
+Vibration: 194
+
+AI Prediction:
+FOREST FIRE
+
+Risk:
+HIGH
+
+Last Update:
+14:36:12
+
+ESP32:
+ONLINE
+```
+
+---
+
+# 17. Authority Alert Management
+
+Don't just display alerts.
+
+Allow authority to manage them.
+
+```text
+Alert ID
+Hazard
+Location
+Severity
+Detected
+Status
+```
+
+Status:
+
+```text
+ACTIVE
+ACKNOWLEDGED
+UNDER INVESTIGATION
+RESOLVED
+```
+
+Example:
+
+```text
+🔥 FIRE-001
+HIGH
+Node 001
+
+[ACKNOWLEDGE]
+
+[ASSIGN]
+
+[RESOLVE]
+```
+
+This makes the dashboard look like a real operational system rather than just a visualization.
+
+---
+
+# 18. Incident Management
+
+Add:
+
+```text
+/incidents
+```
+
+When a serious alert happens:
+
+```text
+Alert
+ ↓
+Incident Created
+ ↓
+Authority Acknowledges
+ ↓
+Response Team Assigned
+ ↓
+Investigation
+ ↓
+Resolved
+```
+
+Timeline:
+
+```text
+14:35
+AI detected high fire risk
+
+14:36
+Alert generated
+
+14:37
+Authority acknowledged
+
+14:40
+Response assigned
+
+15:10
+Incident resolved
+```
+
+---
+
+# 19. Live Sensor Page
+
+Your existing `/sensors` should remain authority-only.
+
+This is where all raw ESP32 readings appear.
+
+Example:
+
+```text
+TEMPERATURE
+35.8°C
+
+HUMIDITY
+62%
+
+MQ2
+1832
+
+SOIL MOISTURE
+4095
+
+VIBRATION
+195
+
+pH
+7.2
+```
+
+Use live Firebase listeners.
+
+---
+
+# 20. AI/ML Page
+
+Your existing `/ai` can show:
+
+```text
+AI INTELLIGENCE
+
+Forest Fire
+Prediction: FIRE
+Risk: HIGH
+
+Extreme Heat
+Prediction: HEATWAVE
+Risk: WARNING
+
+Water Quality
+Prediction: SAFE
+Risk: LOW
+
+Air Quality
+Prediction: MODERATE
+Risk: WARNING
+```
+
+Also show:
+
+```text
+Model Status
+Last Prediction
+Prediction Time
+Model Version
+```
+
+But remember:
+
+**Model test accuracy ≠ live prediction confidence.**
+
+---
+
+# 21. Historical Analytics
+
+Your current mock Recharts data should eventually be replaced by Firebase historical data.
+
+For example:
+
+```text
+Temperature
+  │       ╭──╮
+  │   ╭───╯  ╰──
+  │───╯
+  └──────────────
+    10  11  12  13
+```
+
+And:
+
+```text
+Alerts by Hazard
+
+Fire          ███████
+Flood         ████
+Heat          █████████
+Air           █████
+Landslide     ██
+```
+
+Filters:
+
+```text
+Today
+7 Days
+30 Days
+Custom
+```
+
+---
+
+# 22. Node Management
+
+Current mock nodes should eventually be replaced by actual Firebase node records.
+
+Example:
+
+```text
+NODE ID       AREA       STATUS       LAST UPDATE
+NODE-001      Area A     🟢 ONLINE    10 sec ago
+NODE-002      Area B     🟢 ONLINE    8 sec ago
+NODE-003      Area C     🔴 OFFLINE   12 min ago
+```
+
+When you add another ESP32 later, it automatically becomes another node.
+
+---
+
+# 23. VERY IMPORTANT — REMOVE MOCK DATA
+
+This is probably the **most important next step**.
+
+Currently:
+
+```text
+ESP32
+ ↓
+Firebase
+ ↓
+Node 001 = REAL
+
+Node 002 = MOCK
+Node 003 = MOCK
+Node 004 = MOCK
+```
+
+For your final system:
+
+```text
+ESP32 Node 001 ─┐
+ESP32 Node 002 ─┤
+ESP32 Node 003 ─┤
+ESP32 Node 004 ─┤
+                ↓
+        Firebase Realtime DB
+                ↓
+       React Application
+          ↙           ↘
+      PUBLIC       AUTHORITY
+```
+
+For the current prototype, **one real ESP32 is completely okay**.
+
+But the code architecture should be designed for multiple nodes.
+
+---
+
+# 24. Firebase Structure I Recommend
+
+Instead of keeping every module completely separate forever, move toward a node-based structure:
+
+```text
+/envisence
+
+    /nodes
+
+        /NODE_001
+            area
+            latitude
+            longitude
+            online
+            last_update
+
+            /sensors
+                temperature
+                humidity
+                mq2
+                vibration
+                ph
+                turbidity
+                tds
+                water_level
+                soil_moisture
+
+            /predictions
+                forest_fire
+                air_quality
+                water_quality
+                flood
+                landslide
+                extreme_heat
+                industrial
+
+            /device
+                wifi
+                uptime
+                battery
+
+    /alerts
+
+        /ALERT_001
+            hazard
+            severity
+            latitude
+            longitude
+            timestamp
+            prediction
+            status
+
+    /zones
+
+    /history
+
+    /shelters
+```
+
+Your current paths can continue temporarily, but eventually this structure will make multi-node support much easier.
+
+---
+
+# 25. ESP32 → Firebase → Dashboard
+
+The most important live flow should become:
+
+```text
+              ESP32
+                │
+        ┌───────┴────────┐
+        │                │
+     Sensors          Edge AI
+        │                │
+        └───────┬────────┘
+                ↓
+         Risk Decision
+                ↓
+       ┌────────┴────────┐
+       │                 │
+  Local Alert        Firebase
+ Buzzer/LCD/LED          │
+                         ↓
+                ┌────────┴────────┐
+                │                 │
+             PUBLIC            AUTHORITY
+```
+
+So if Firebase goes down:
+
+```text
+ESP32
+ ↓
+Edge AI
+ ↓
+Local decision
+ ↓
+Buzzer/LED/LCD
+```
+
+still works.
+
+That is important for your **Edge AI requirement**.
+
+---
+
+# 26. Public Data vs Authority Data
+
+This separation is extremely important.
+
+| Feature             |        Public | Authority |
+| ------------------- | ------------: | --------: |
+| Overall risk        |             ✅ |         ✅ |
+| Nearby risks        |             ✅ |         ✅ |
+| Public map          |             ✅ |         ✅ |
+| Safety instructions |             ✅ |         ✅ |
+| Alerts              |        Nearby |       All |
+| Raw sensor values   |             ❌ |         ✅ |
+| AI details          |    Simplified |      Full |
+| Sensor nodes        |   Approximate |      Full |
+| Device health       |             ❌ |         ✅ |
+| Node management     |             ❌ |         ✅ |
+| Incident management |             ❌ |         ✅ |
+| Analytics           |         Basic |      Full |
+| Historical data     |         Basic |      Full |
+| Model information   |             ❌ |         ✅ |
+| User location       | Local/browser |         ❌ |
+| Authority controls  |             ❌ |         ✅ |
+
+---
+
+# 27. Security
+
+Even though the public doesn't need login, **authority absolutely needs authentication**.
+
+Use Firebase Authentication:
+
+```text
+Public
+   ↓
+No Login
+   ↓
+Public Pages
+
+Authority
+   ↓
+Firebase Login
+   ↓
+Role Check
+   ↓
+Authority Dashboard
+```
+
+And Firebase Rules should prevent normal users from writing/modifying sensor data.
+
+---
+
+# 28. Recommended Final React Structure
+
+I would change your project toward:
+
+```text
+src/
+
+├── components/
+│   ├── Card.jsx
+│   ├── Header.jsx
+│   ├── Sidebar.jsx
+│   ├── StatusBadge.jsx
+│   ├── AlertCard.jsx
+│   ├── RiskCard.jsx
+│   ├── MapView.jsx
+│   ├── RiskMap.jsx
+│   ├── SensorChart.jsx
+│   └── EmergencyCard.jsx
+│
+├── context/
+│   ├── AuthContext.jsx
+│   └── LocationContext.jsx
+│
+├── hooks/
+│   ├── useFirebaseValue.js
+│   ├── useFirebaseList.js
+│   └── useUserLocation.js
+│
+├── pages/
+│
+│   ├── public/
+│   │   ├── PublicHome.jsx
+│   │   ├── PublicDashboard.jsx
+│   │   ├── PublicMap.jsx
+│   │   ├── NearbyRisks.jsx
+│   │   ├── PublicAlerts.jsx
+│   │   ├── SafetyCenter.jsx
+│   │   ├── EmergencyCenter.jsx
+│   │   └── PublicProfile.jsx
+│   │
+│   └── authority/
+│       ├── DashboardHome.jsx
+│       ├── DisasterMonitoring.jsx
+│       ├── EnvironmentalMonitoring.jsx
+│       ├── SensorData.jsx
+│       ├── AIMLMonitoring.jsx
+│       ├── AlertSystem.jsx
+│       ├── RiskMap.jsx
+│       ├── Analytics.jsx
+│       ├── NodeManagement.jsx
+│       ├── IncidentManagement.jsx
+│       └── DeviceInfo.jsx
+│
+├── services/
+│   ├── firebaseService.js
+│   ├── locationService.js
+│   └── alertService.js
+│
+├── firebase.js
+├── App.jsx
+└── main.jsx
+```
+
+---
+
+# 29. The Best Implementation Order
+
+Don't try to implement everything simultaneously.
+
+### STEP 1 — Public entry point
+
+Make:
+
+```text
+/
+```
+
+open to everyone.
+
+No login.
+
+---
+
+### STEP 2 — Public Dashboard
+
+Build:
+
+```text
+/public
+```
+
+using **your existing real Firebase data**.
+
+---
+
+### STEP 3 — Authority Login
+
+Keep:
+
+```text
+/login
+```
+
+and protect:
+
+```text
+/dashboard/*
+```
+
+---
+
+### STEP 4 — Live Firebase Integration
+
+This is critical.
+
+Replace:
+
+```text
+MOCK_NODE_002
+MOCK_NODE_003
+```
+
+with Firebase-driven node data wherever possible.
+
+---
+
+### STEP 5 — Map
+
+Build:
+
+```text
+/public/map
+/dashboard/map
+```
+
+Both use the same Firebase node/alert data but show different detail levels.
+
+---
+
+### STEP 6 — Nearby Risk
+
+Implement:
+
+```text
+User location
+      ↓
+Nearest nodes
+      ↓
+Latest Firebase predictions
+      ↓
+Distance calculation
+      ↓
+Nearby risk
+```
+
+---
+
+### STEP 7 — Public Alerts
+
+Only high/critical alerts relevant to the user's area.
+
+---
+
+### STEP 8 — Authority Operations
+
+Add:
+
+```text
+Acknowledge
+Assign
+Resolve
+Incident timeline
+```
+
+---
+
+### STEP 9 — Historical Firebase Data
+
+Replace the current mock Recharts data with real historical sensor/alert data.
+
+---
+
+### STEP 10 — Notifications
+
+Finally:
+
+```text
+ESP32
+ ↓
+Edge AI
+ ↓
+Critical Alert
+ ↓
+Firebase
+ ↓
+Notification
+ ↓
+Public user
+```
+
+---
+
+## 🔥 So the final product should feel like this
+
+### Public opens the app:
+
+```text
+        ENVIRONMENTAL SAFETY
+
+             🟢 SAFE
+
+        Your area is safe
+
+────────────────────────────
+
+📍 My Area
+🗺️ Live Risk Map
+⚠️ Nearby Risks
+🚨 Alerts
+🛡️ Safety Center
+☎️ Emergency
+👤 Profile
+
+                     🔐 Authority
+```
+
+### Authority clicks **Authority**
+
+```text
+Firebase Login
+      ↓
+COMMAND CENTER
+
+🟢 12 Nodes Online
+🔴 2 Critical Alerts
+🟠 5 Warnings
+
+        LIVE RISK MAP
+
+🔥 Fire       🔴
+🌊 Flood      🟢
+🌡️ Heat      🟠
+🌫️ Air       🟠
+⛰️ Landslide  🔴
+
+────────────────────────
+
+Live Sensors
+AI/ML
+Alerts
+Incidents
+Analytics
+Nodes
+Device Health
+Reports
+```
+
+**This is the direction I recommend for your current app.** Most importantly, don't build a separate fake public system: **both dashboards should consume the same real ESP32 → Firebase stream, with the Authority side simply exposing much more detailed information and controls.**

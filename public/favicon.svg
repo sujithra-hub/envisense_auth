@@ -1,0 +1,47 @@
+<svg width="64" height="64" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="enviFormalGrad" x1="0" y1="0" x2="40" y2="40" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#007AFF" />
+      <stop offset="50%" stop-color="#0066D6" />
+      <stop offset="100%" stop-color="#004499" />
+    </linearGradient>
+    <linearGradient id="enviBorderGrad" x1="0" y1="0" x2="40" y2="40" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#5AC8FA" stop-opacity="0.9" />
+      <stop offset="100%" stop-color="#007AFF" stop-opacity="0.5" />
+    </linearGradient>
+  </defs>
+
+  <!-- Background rounded badge -->
+  <rect x="2" y="2" width="36" height="36" rx="9" fill="url(#enviFormalGrad)" />
+  <rect x="2" y="2" width="36" height="36" rx="9" stroke="url(#enviBorderGrad)" stroke-width="1.2" fill="none" />
+
+  <!-- Formal Authority Shield Emblem -->
+  <path
+    d="M20 7L31 11.5V19.5C31 26.5 20 32.5 20 32.5C20 32.5 9 26.5 9 19.5V11.5L20 7Z"
+    fill="#ffffff"
+    fill-opacity="0.15"
+    stroke="#ffffff"
+    stroke-width="1.8"
+    stroke-linejoin="round"
+  />
+
+  <!-- Concentric Telemetry Sensor Rings -->
+  <path
+    d="M14 16C16 14.2 24 14.2 26 16"
+    stroke="#ffffff"
+    stroke-width="1.8"
+    stroke-linecap="round"
+    opacity="0.9"
+  />
+  <path
+    d="M16 19.5C17.5 18 22.5 18 24 19.5"
+    stroke="#ffffff"
+    stroke-width="1.8"
+    stroke-linecap="round"
+    opacity="0.95"
+  />
+
+  <!-- Central Precision Beacon Dot -->
+  <circle cx="20" cy="23.5" r="2.2" fill="#5AC8FA" />
+  <circle cx="20" cy="23.5" r="1.1" fill="#ffffff" />
+</svg>
