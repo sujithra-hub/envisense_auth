@@ -19,10 +19,8 @@ export const useSensorHistory = (maxPoints = 50) => {
   const RECORD_INTERVAL = 10000; // Record every 10 seconds
 
   useEffect(() => {
-    // Subscribe to live sensors for session-based accumulation
-    const sensorsRef = ref(db, '/envisence/live/sensors');
-    const unsubscribeSensors = onValue(sensorsRef, (snapshot) => {
-      const sensors = snapshot.val();
+    let nodesUnsub = null;
+    const processSensors = (sensors) => {
       if (!sensors) return;
 
       const now = Date.now();
@@ -42,21 +40,41 @@ export const useSensorHistory = (maxPoints = 50) => {
         timestamp: now,
         temperature: sensors.temperature ?? null,
         humidity: sensors.humidity ?? null,
-        mq2: sensors.mq2_raw ?? null,
-        vibration: sensors.vibration_raw ?? null,
-        ph: sensors.ph_raw ?? null,
-        tds: sensors.tds_ppm ?? null,
-        soilMoisture: sensors.soil_moisture_raw ?? null,
+        mq2: sensors.mq2_raw ?? sensors.mq2 ?? null,
+        vibration: sensors.vibration_raw ?? sensors.vibration ?? null,
+        ph: sensors.ph_raw ?? sensors.ph ?? null,
+        tds: sensors.tds_ppm ?? sensors.tds ?? null,
+        soilMoisture: sensors.soil_moisture_raw ?? sensors.soil_moisture ?? null,
         smoke: sensors.smoke_condition ?? null,
         flame: sensors.flame_condition ?? null,
         rain: sensors.rain_condition ?? null,
-        waterLevel: sensors.water_level_condition ?? null,
+        waterLevel: sensors.water_level_condition ?? sensors.water_level ?? null,
       };
 
       setHistory((prev) => {
         const updated = [...prev, entry];
         return updated.slice(-maxPoints);
       });
+    };
+
+    const sensorsRef = ref(db, '/envisence/live/sensors');
+    const unsubscribeSensors = onValue(sensorsRef, (snapshot) => {
+      const sensors = snapshot.val();
+      if (sensors) {
+        processSensors(sensors);
+      } else {
+        const nodesRef = ref(db, '/envisence/nodes');
+        if (nodesUnsub) nodesUnsub();
+        nodesUnsub = onValue(nodesRef, (nodesSnap) => {
+          const nodes = nodesSnap.val();
+          if (nodes && typeof nodes === 'object') {
+            const firstNode = Object.values(nodes)[0];
+            if (firstNode?.sensors) {
+              processSensors(firstNode.sensors);
+            }
+          }
+        });
+      }
     });
 
     // Also try to read Firebase-stored history if available
@@ -84,6 +102,7 @@ export const useSensorHistory = (maxPoints = 50) => {
     return () => {
       unsubscribeSensors();
       unsubscribeHistory();
+      if (nodesUnsub) nodesUnsub();
     };
   }, [maxPoints]);
 

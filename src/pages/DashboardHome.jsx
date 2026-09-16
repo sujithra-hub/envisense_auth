@@ -397,9 +397,11 @@ const DashboardHome = () => {
           <OnlineDot $online={device?.online ?? true} />
           <span>ESP32 Hardware Node {device?.online ?? true ? 'Online' : 'Offline'}</span>
           <span style={{ color: colors.textMuted }}>•</span>
-          <span>Temp: {sensors?.temperature ?? 28}°C</span>
+          <span>Temp: {sensors?.temperature != null ? `${sensors.temperature}°C` : 'N/A'}</span>
           <span style={{ color: colors.textMuted }}>•</span>
-          <span>MQ2 Gas: {sensors?.mq2 ?? 450} PPM</span>
+          <span>Humidity: {sensors?.humidity != null ? `${sensors.humidity}%` : 'N/A'}</span>
+          <span style={{ color: colors.textMuted }}>•</span>
+          <span>MQ2 Gas: {sensors?.mq2_raw ?? sensors?.mq2 ?? 'N/A'} raw</span>
         </DeviceRow>
       </StatusCard>
 

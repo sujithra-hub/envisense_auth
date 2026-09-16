@@ -10,6 +10,7 @@ import Grid from '../components/Grid';
 import { useFirebaseValue } from '../hooks/useFirebaseValue';
 import { colors } from '../theme/colors';
 import RiskEventDetailModal from '../components/RiskEventDetailModal';
+import { deriveHazardRisks } from '../services/locationService';
 
 const PageHeader = styled.div`
   display: flex;
@@ -178,16 +179,14 @@ const EnvironmentalMonitoring = () => {
 
   const loading = sensorsLoading || airLoading || waterLoading;
 
-  // Dynamic Air Quality status computation
+  // Dynamic Air Quality status computation (variables for display)
   const mq2Val = sensors?.mq2_raw ?? 450;
   const smokeCond = sensors?.smoke_condition ?? 'Normal';
   const flameCond = sensors?.flame_condition ?? 'Clear';
-  let airStatus = 'SAFE';
-  if (mq2Val > 800 || smokeCond === 'Smoke Detected' || flameCond === 'Flame Detected') {
-    airStatus = 'CRITICAL';
-  } else if (mq2Val > 600 || airQuality?.ai_prediction === 'RISK') {
-    airStatus = 'WARNING';
-  }
+
+  // Use Air Quality status derived from locationService which respects strict MQ2 thresholds
+  const hazards = deriveHazardRisks(sensors || {}).hazards;
+  let airStatus = hazards?.air_quality?.risk || 'SAFE';
 
   // Dynamic Water Quality status computation
   const phRaw = sensors?.ph_raw ?? 2400;

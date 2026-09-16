@@ -162,7 +162,9 @@ const AlertSystem = () => {
   const turbidityStatus = s.turbidity_status || 'Clear';
 
   // Pure live sensor hazard status calculations
-  const airStatus = mq2Val > 800 ? 'CRITICAL' : mq2Val > 600 || airQuality?.ai_prediction === 'RISK' ? 'WARNING' : 'SAFE';
+  let airStatus = 'SAFE';
+  if (mq2Val >= 3150) airStatus = 'CRITICAL';
+  else if (mq2Val >= 3051) airStatus = 'WARNING';
   const floodStatus = waterLevelVal >= 70 ? 'CRITICAL' : waterLevelVal >= 40 || flood?.ai_prediction === 'RISK' ? 'WARNING' : 'SAFE';
   const heatStatus = tempVal >= 40 ? 'CRITICAL' : tempVal >= 35 || heat?.ai_prediction === 'RISK' ? 'WARNING' : 'SAFE';
   const waterStatus = (tdsVal > 500 || turbidityStatus === 'Dirty / High Turbidity' || water?.ai_prediction === 'RISK') ? 'WARNING' : 'SAFE';

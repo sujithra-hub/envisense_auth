@@ -103,11 +103,11 @@ export const deriveHazardRisks = (telemetry = {}) => {
     else if (warnVib || verySaturated || moderateSat) landslideRisk = 'WARNING';
   }
 
-  // Air Quality risk rule
+  // Air Quality risk rule (Strict user requirement)
   let airRisk = 'SAFE';
   if (mq2 != null) {
-    if (mq2 >= customMq2Warn + 100) airRisk = 'CRITICAL';
-    else if (mq2 >= customMq2Warn) airRisk = 'WARNING';
+    if (mq2 >= 3150) airRisk = 'CRITICAL';
+    else if (mq2 >= 3051) airRisk = 'WARNING';
     else airRisk = 'SAFE';
   }
 

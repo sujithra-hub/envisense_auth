@@ -327,8 +327,8 @@ const RiskEventDetailModal = ({ isOpen = true, onClose, event, moduleKey, locati
   let isWarning = false;
 
   if (targetKey === 'air_quality' || targetKey === 'air') {
-    isCritical = mq2 > 800 || smokeCond === 'Smoke Detected' || flameCond === 'Flame Detected' || hazardFirebase?.status === 'CRITICAL';
-    isWarning = (mq2 > 600 || airQuality?.ai_prediction === 'RISK' || hazardFirebase?.status === 'WARNING') && !isCritical;
+    isCritical = mq2 >= 3150 || smokeCond === 'Smoke Detected' || flameCond === 'Flame Detected' || hazardFirebase?.status === 'CRITICAL';
+    isWarning = (mq2 >= 3051 || hazardFirebase?.status === 'WARNING') && !isCritical;
   } else if (targetKey === 'water_quality' || targetKey === 'water') {
     isCritical = (tdsVal > 800 || turbidityStatus === 'Dirty / High Turbidity') && (waterQuality?.ai_prediction === 'RISK' || hazardFirebase?.status === 'CRITICAL');
     isWarning = (tdsVal > 500 || turbidityStatus === 'Dirty / High Turbidity' || waterQuality?.ai_prediction === 'RISK' || hazardFirebase?.status === 'WARNING') && !isCritical;

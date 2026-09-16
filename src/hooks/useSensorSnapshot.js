@@ -24,9 +24,25 @@ export const useSensorSnapshot = () => {
   // Keep a live reference to current sensor data
   // ------------------------------------------------------------------
   useEffect(() => {
+    let nodesUnsub = null;
     const sensorsRef = ref(db, '/envisence/live/sensors');
     const unsub1 = onValue(sensorsRef, (snap) => {
-      latestSensorsRef.current = snap.val();
+      const val = snap.val();
+      if (val) {
+        latestSensorsRef.current = val;
+      } else {
+        const nodesRef = ref(db, '/envisence/nodes');
+        if (nodesUnsub) nodesUnsub();
+        nodesUnsub = onValue(nodesRef, (nodesSnap) => {
+          const nodes = nodesSnap.val();
+          if (nodes && typeof nodes === 'object') {
+            const firstNode = Object.values(nodes)[0];
+            if (firstNode?.sensors) {
+              latestSensorsRef.current = firstNode.sensors;
+            }
+          }
+        });
+      }
     });
 
     const overallRef = ref(db, '/envisence/live/overall_status');
@@ -47,6 +63,7 @@ export const useSensorSnapshot = () => {
       unsub1();
       unsub2();
       unsub3();
+      if (nodesUnsub) nodesUnsub();
     };
   }, []);
 
